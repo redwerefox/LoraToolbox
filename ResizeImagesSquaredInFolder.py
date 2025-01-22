@@ -2,6 +2,8 @@
 from PIL import Image
 import os
 
+RESOLUTION = 1024
+GENERATED_FILE_SUFFIX = "_resized.png"
 
 def clip_image_center_square(image_path):
     image = Image.open(image_path)
@@ -23,14 +25,11 @@ def clip_image_center_square(image_path):
     return image.crop((left, top, right, bottom))
         
 
-def resize_image(image_path, X_RESOLUTION, Y_RESOLUTION):
+def resize_image(image_path, RESOLUTION):
     
     imageCropped = clip_image_center_square(image_path)
 
-    image = imageCropped.resize((X_RESOLUTION, Y_RESOLUTION))
-
-    # Save as png
-    # ensure format
+    image = imageCropped.resize((RESOLUTION, RESOLUTION))
     
     image_path = os.path.splitext(image_path)[0] + "_resized.png"
 
@@ -39,13 +38,12 @@ def resize_image(image_path, X_RESOLUTION, Y_RESOLUTION):
 
 def runOperationOnImagesInFolder (folder_path):
     
-    for filename in os.listdir(folder_path):
-        if filename.endswith(".png") or filename.endswith(".jpg"):
-            resize_image(folder_path + filename, 256, 256)
-        else:
-            continue
-
-    print("All images in folder resized")
+    with os.scandir(folder_path) as entries:
+        return [resize_image(entry, RESOLUTION) for entry in entries
+                          if entry.is_file()
+                            and (entry.name.endswith(".png")
+                                  or entry.name.endswith(".jpg")) 
+                                  and not entry.name.endswith(GENERATED_FILE_SUFFIX)]
 
 def getArgumentFolderPath ():
     import sys
